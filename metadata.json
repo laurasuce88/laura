@@ -1,0 +1,5 @@
+{
+  "name": "FloraMundi",
+  "description": "A 3D interactive globe showcasing beautiful flowers from around the world.",
+  "requestFramePermissions": []
+}
