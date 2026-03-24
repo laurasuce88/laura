@@ -74,8 +74,8 @@ export default function PaymentModal({ figurine, quantity, onClose, onSuccess }:
 
         {/* Order info */}
         <div className="px-5 py-4 flex items-center gap-4 bg-pink-50/50">
-          <div className="w-14 h-14 rounded-xl overflow-hidden border border-pink-100 shrink-0 bg-white">
-            <img src={figurine.image} alt={figurine.name} className="w-full h-full object-cover" />
+          <div className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0" style={{ background: `linear-gradient(135deg, ${figurine.bgFrom}, ${figurine.bgTo})` }}>
+            <span className="text-3xl select-none">{figurine.emoji}</span>
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-gray-800 font-bold text-sm truncate">{figurine.name}</p>

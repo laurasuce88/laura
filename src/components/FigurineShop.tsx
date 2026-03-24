@@ -9,6 +9,32 @@ interface CartItem {
   quantity: number;
 }
 
+function FigurineCard({ figurine }: { figurine: Figurine }) {
+  return (
+    <div
+      className="aspect-square flex items-center justify-center relative overflow-hidden"
+      style={{ background: `linear-gradient(135deg, ${figurine.bgFrom}, ${figurine.bgTo})` }}
+    >
+      <span className="text-[80px] sm:text-[90px] select-none drop-shadow-lg">{figurine.emoji}</span>
+      {/* 装饰气泡 */}
+      <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-white/30" />
+      <div className="absolute bottom-6 left-4 w-4 h-4 rounded-full bg-white/20" />
+      <div className="absolute top-1/4 left-6 w-3 h-3 rounded-full bg-white/15" />
+    </div>
+  );
+}
+
+function MiniCard({ figurine }: { figurine: Figurine }) {
+  return (
+    <div
+      className="w-16 h-16 rounded-xl flex items-center justify-center shrink-0"
+      style={{ background: `linear-gradient(135deg, ${figurine.bgFrom}, ${figurine.bgTo})` }}
+    >
+      <span className="text-3xl select-none">{figurine.emoji}</span>
+    </div>
+  );
+}
+
 export default function FigurineShop() {
   const [selectedFigurine, setSelectedFigurine] = useState<Figurine | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -81,9 +107,7 @@ export default function FigurineShop() {
           <div className="flex items-center gap-2">
             <span className="text-2xl">🧸</span>
             <div>
-              <h1 className="text-lg font-bold text-gray-800 tracking-wide">
-                咕咕公仔屋
-              </h1>
+              <h1 className="text-lg font-bold text-gray-800 tracking-wide">咕咕公仔屋</h1>
               <p className="text-[10px] text-pink-400 tracking-widest">GUGU FIGURINE HOUSE</p>
             </div>
           </div>
@@ -175,28 +199,16 @@ export default function FigurineShop() {
               onClick={() => setSelectedFigurine(figurine)}
               className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-pink-50 hover:border-pink-200"
             >
-              <div className="relative aspect-square overflow-hidden" style={{ backgroundColor: figurine.bgColor }}>
-                {/* Emoji 背景兜底 */}
-                <div className="absolute inset-0 flex items-center justify-center text-8xl opacity-80 pointer-events-none select-none">
-                  {figurine.emoji}
-                </div>
-                <img
-                  src={figurine.image}
-                  alt={figurine.name}
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  loading="lazy"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                />
+              <div className="relative">
+                <FigurineCard figurine={figurine} />
                 {figurine.tags.length > 0 && (
                   <div className="absolute top-2 left-2 flex flex-col gap-1">
                     {figurine.tags.map(tag => (
                       <span
                         key={tag}
                         className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                          tag === '限量'
-                            ? 'bg-red-500 text-white'
-                            : tag === '新品'
-                            ? 'bg-blue-500 text-white'
+                          tag === '限量' ? 'bg-red-500 text-white'
+                            : tag === '新品' ? 'bg-blue-500 text-white'
                             : 'bg-orange-500 text-white'
                         }`}
                       >
@@ -249,9 +261,7 @@ export default function FigurineShop() {
                   {cartCount}
                 </span>
               </div>
-              <div className="text-left">
-                <p className="text-pink-500 text-xl font-bold">¥{cartTotal}</p>
-              </div>
+              <p className="text-pink-500 text-xl font-bold">¥{cartTotal}</p>
             </button>
             <button
               onClick={handleCheckout}
@@ -263,17 +273,11 @@ export default function FigurineShop() {
         </motion.div>
       )}
 
-      {/* 购物车侧边栏 */}
+      {/* 购物车 */}
       <AnimatePresence>
         {showCart && (
           <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/30"
-              onClick={() => setShowCart(false)}
-            />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/30" onClick={() => setShowCart(false)} />
             <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
@@ -283,58 +287,35 @@ export default function FigurineShop() {
             >
               <div className="p-5 border-b border-gray-100 flex items-center justify-between shrink-0">
                 <h3 className="font-bold text-lg text-gray-800">购物车 ({cartCount})</h3>
-                <button onClick={() => setShowCart(false)} className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400">
-                  <X size={18} />
-                </button>
+                <button onClick={() => setShowCart(false)} className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400"><X size={18} /></button>
               </div>
-
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {cart.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-gray-300">
-                    <Package size={48} className="mb-3" />
-                    <p>购物车空空的~</p>
+                    <Package size={48} className="mb-3" /><p>购物车空空的~</p>
                   </div>
-                ) : (
-                  cart.map(item => (
-                    <div key={item.figurine.id} className="flex gap-3 p-3 rounded-2xl bg-pink-50/50 border border-pink-100">
-                      <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0" style={{ backgroundColor: item.figurine.bgColor }}>
-                        <div className="absolute inset-0 flex items-center justify-center text-3xl select-none">{item.figurine.emoji}</div>
-                        <img src={item.figurine.image} alt={item.figurine.name} className="absolute inset-0 w-full h-full object-cover" loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm text-gray-800 truncate">{item.figurine.name}</p>
-                        <p className="text-pink-500 font-bold mt-1">¥{item.figurine.price}</p>
-                        <div className="flex items-center gap-3 mt-1.5">
-                          <button
-                            onClick={() => removeFromCart(item.figurine.id)}
-                            className="p-1 rounded-lg bg-white border border-gray-200 text-gray-400 active:scale-90"
-                          >
-                            <Minus size={14} />
-                          </button>
-                          <span className="text-sm font-bold w-5 text-center">{item.quantity}</span>
-                          <button
-                            onClick={() => addToCart(item.figurine)}
-                            className="p-1 rounded-lg bg-white border border-gray-200 text-gray-400 active:scale-90"
-                          >
-                            <Plus size={14} />
-                          </button>
-                        </div>
+                ) : cart.map(item => (
+                  <div key={item.figurine.id} className="flex gap-3 p-3 rounded-2xl bg-pink-50/50 border border-pink-100">
+                    <MiniCard figurine={item.figurine} />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm text-gray-800 truncate">{item.figurine.name}</p>
+                      <p className="text-pink-500 font-bold mt-1">¥{item.figurine.price}</p>
+                      <div className="flex items-center gap-3 mt-1.5">
+                        <button onClick={() => removeFromCart(item.figurine.id)} className="p-1 rounded-lg bg-white border border-gray-200 text-gray-400 active:scale-90"><Minus size={14} /></button>
+                        <span className="text-sm font-bold w-5 text-center">{item.quantity}</span>
+                        <button onClick={() => addToCart(item.figurine)} className="p-1 rounded-lg bg-white border border-gray-200 text-gray-400 active:scale-90"><Plus size={14} /></button>
                       </div>
                     </div>
-                  ))
-                )}
+                  </div>
+                ))}
               </div>
-
               {cart.length > 0 && (
                 <div className="p-4 border-t border-gray-100 shrink-0">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-gray-400 text-sm">合计</span>
                     <span className="text-pink-500 text-2xl font-bold">¥{cartTotal}</span>
                   </div>
-                  <button
-                    onClick={handleCheckout}
-                    className="w-full py-3.5 rounded-full bg-gradient-to-r from-pink-500 to-rose-400 text-white font-bold shadow-lg shadow-pink-200 active:scale-[0.98] transition-transform"
-                  >
+                  <button onClick={handleCheckout} className="w-full py-3.5 rounded-full bg-gradient-to-r from-pink-500 to-rose-400 text-white font-bold shadow-lg shadow-pink-200 active:scale-[0.98] transition-transform">
                     扫码支付
                   </button>
                 </div>
@@ -344,7 +325,7 @@ export default function FigurineShop() {
         )}
       </AnimatePresence>
 
-      {/* 商品详情弹窗 */}
+      {/* 商品详情 */}
       <AnimatePresence>
         {selectedFigurine && (
           <motion.div
@@ -361,13 +342,16 @@ export default function FigurineShop() {
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md max-h-[85vh] flex flex-col overflow-hidden"
             >
-              <div className="relative aspect-square overflow-hidden shrink-0" style={{ backgroundColor: selectedFigurine.bgColor }}>
-                <div className="absolute inset-0 flex items-center justify-center text-[120px] opacity-80 pointer-events-none select-none">{selectedFigurine.emoji}</div>
-                <img src={selectedFigurine.image} alt={selectedFigurine.name} className="absolute inset-0 w-full h-full object-cover" loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                <button
-                  onClick={() => setSelectedFigurine(null)}
-                  className="absolute top-4 right-4 p-2 bg-white/80 hover:bg-white rounded-full text-gray-500 backdrop-blur-md shadow-sm"
+              <div className="relative shrink-0">
+                <div
+                  className="aspect-[4/3] flex items-center justify-center"
+                  style={{ background: `linear-gradient(135deg, ${selectedFigurine.bgFrom}, ${selectedFigurine.bgTo})` }}
                 >
+                  <span className="text-[120px] select-none drop-shadow-lg">{selectedFigurine.emoji}</span>
+                  <div className="absolute top-6 right-10 w-8 h-8 rounded-full bg-white/30" />
+                  <div className="absolute bottom-10 left-8 w-5 h-5 rounded-full bg-white/20" />
+                </div>
+                <button onClick={() => setSelectedFigurine(null)} className="absolute top-4 right-4 p-2 bg-white/80 hover:bg-white rounded-full text-gray-500 backdrop-blur-md shadow-sm">
                   <X size={18} />
                 </button>
                 {selectedFigurine.originalPrice && (
@@ -380,11 +364,7 @@ export default function FigurineShop() {
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-[10px] px-2 py-0.5 bg-pink-100 text-pink-500 rounded-md font-medium">{selectedFigurine.category}</span>
                   <div className="flex items-center gap-0.5 text-yellow-400">
-                    <Star size={12} fill="currentColor" />
-                    <Star size={12} fill="currentColor" />
-                    <Star size={12} fill="currentColor" />
-                    <Star size={12} fill="currentColor" />
-                    <Star size={12} fill="currentColor" />
+                    {[...Array(5)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}
                     <span className="text-xs text-gray-400 ml-1">4.9</span>
                   </div>
                 </div>
@@ -392,22 +372,14 @@ export default function FigurineShop() {
                 <p className="text-gray-500 text-sm leading-relaxed mt-3">{selectedFigurine.description}</p>
                 <div className="mt-4 flex items-baseline gap-2">
                   <span className="text-pink-500 text-3xl font-bold">¥{selectedFigurine.price}</span>
-                  {selectedFigurine.originalPrice && (
-                    <span className="text-gray-300 text-sm line-through">¥{selectedFigurine.originalPrice}</span>
-                  )}
+                  {selectedFigurine.originalPrice && <span className="text-gray-300 text-sm line-through">¥{selectedFigurine.originalPrice}</span>}
                 </div>
                 <p className="text-gray-400 text-xs mt-1">库存 {selectedFigurine.stock} 件 · 全国包邮</p>
                 <div className="flex gap-3 mt-5">
-                  <button
-                    onClick={() => { addToCart(selectedFigurine); setSelectedFigurine(null); }}
-                    className="flex-1 py-3 rounded-full bg-pink-50 text-pink-500 font-bold border-2 border-pink-200 hover:bg-pink-100 transition-colors active:scale-[0.98]"
-                  >
+                  <button onClick={() => { addToCart(selectedFigurine); setSelectedFigurine(null); }} className="flex-1 py-3 rounded-full bg-pink-50 text-pink-500 font-bold border-2 border-pink-200 hover:bg-pink-100 transition-colors active:scale-[0.98]">
                     加入购物车
                   </button>
-                  <button
-                    onClick={() => handleBuyNow(selectedFigurine)}
-                    className="flex-1 py-3 rounded-full bg-gradient-to-r from-pink-500 to-rose-400 text-white font-bold shadow-lg shadow-pink-200 active:scale-[0.98] transition-transform"
-                  >
+                  <button onClick={() => handleBuyNow(selectedFigurine)} className="flex-1 py-3 rounded-full bg-gradient-to-r from-pink-500 to-rose-400 text-white font-bold shadow-lg shadow-pink-200 active:scale-[0.98] transition-transform">
                     立即购买
                   </button>
                 </div>
@@ -420,12 +392,7 @@ export default function FigurineShop() {
       {/* 支付弹窗 */}
       <AnimatePresence>
         {payingItem && (
-          <PaymentModal
-            figurine={payingItem.figurine}
-            quantity={payingItem.quantity}
-            onClose={() => setPayingItem(null)}
-            onSuccess={handlePaymentSuccess}
-          />
+          <PaymentModal figurine={payingItem.figurine} quantity={payingItem.quantity} onClose={() => setPayingItem(null)} onSuccess={handlePaymentSuccess} />
         )}
       </AnimatePresence>
     </div>
