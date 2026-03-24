@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShoppingCart, Plus, Minus, ArrowLeft, Star, Package, Sparkles } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Star, Package, X, Heart, Truck, ShieldCheck } from 'lucide-react';
 import { figurines, Figurine } from '../data/figurines';
 import PaymentModal from './PaymentModal';
 
@@ -9,18 +9,19 @@ interface CartItem {
   quantity: number;
 }
 
-interface FigurineShopProps {
-  onBack: () => void;
-}
-
-export default function FigurineShop({ onBack }: FigurineShopProps) {
+export default function FigurineShop() {
   const [selectedFigurine, setSelectedFigurine] = useState<Figurine | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
   const [payingItem, setPayingItem] = useState<{ figurine: Figurine; quantity: number } | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
+  const [activeCategory, setActiveCategory] = useState('全部');
 
-  const addToCart = (figurine: Figurine) => {
+  const categories = ['全部', ...Array.from(new Set(figurines.map(f => f.category)))];
+  const filteredFigurines = activeCategory === '全部' ? figurines : figurines.filter(f => f.category === activeCategory);
+
+  const addToCart = (figurine: Figurine, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setCart(prev => {
       const existing = prev.find(item => item.figurine.id === figurine.id);
       if (existing) {
@@ -50,12 +51,12 @@ export default function FigurineShop({ onBack }: FigurineShopProps) {
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const handleBuyNow = (figurine: Figurine) => {
+    setSelectedFigurine(null);
     setPayingItem({ figurine, quantity: 1 });
   };
 
   const handleCheckout = () => {
     if (cart.length === 0) return;
-    // 简化处理：用购物车第一件商品生成支付
     const totalItem: Figurine = {
       ...cart[0].figurine,
       name: `${cart.length}件商品`,
@@ -66,41 +67,36 @@ export default function FigurineShop({ onBack }: FigurineShopProps) {
   };
 
   const handlePaymentSuccess = () => {
-    setSuccessMessage('下单成功！公仔将很快送达~ 🎉');
+    setSuccessMessage('下单成功！可爱公仔正在打包中~');
     setPayingItem(null);
     setCart([]);
     setTimeout(() => setSuccessMessage(''), 3000);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-black text-white">
+    <div className="min-h-screen bg-[#fef7f0] text-gray-800">
       {/* 顶部导航栏 */}
-      <nav className="sticky top-0 z-50 bg-gray-950/80 backdrop-blur-xl border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={onBack}
-              className="p-2 rounded-xl hover:bg-white/10 text-white/60 hover:text-white transition-colors"
-            >
-              <ArrowLeft size={20} />
-            </button>
+      <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-pink-100 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🧸</span>
             <div>
-              <h1 className="text-xl font-serif tracking-wide">
-                繁花<span className="text-pink-400">公仔</span>商城
+              <h1 className="text-lg font-bold text-gray-800 tracking-wide">
+                咕咕公仔屋
               </h1>
-              <p className="text-white/40 text-xs tracking-wider">FLORA FIGURINE SHOP</p>
+              <p className="text-[10px] text-pink-400 tracking-widest">GUGU FIGURINE HOUSE</p>
             </div>
           </div>
           <button
             onClick={() => setShowCart(!showCart)}
-            className="relative p-2.5 rounded-xl hover:bg-white/10 transition-colors"
+            className="relative p-2.5 rounded-2xl hover:bg-pink-50 transition-colors"
           >
-            <ShoppingCart size={22} className="text-white/70" />
+            <ShoppingCart size={22} className="text-gray-600" />
             {cartCount > 0 && (
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 w-5 h-5 bg-pink-500 rounded-full text-white text-xs flex items-center justify-center font-bold"
+                className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-pink-500 rounded-full text-white text-[11px] flex items-center justify-center font-bold"
               >
                 {cartCount}
               </motion.span>
@@ -116,7 +112,7 @@ export default function FigurineShop({ onBack }: FigurineShopProps) {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-6 py-3 bg-green-500/20 border border-green-500/30 rounded-2xl text-green-400 font-medium backdrop-blur-xl"
+            className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-6 py-3 bg-green-50 border border-green-200 rounded-2xl text-green-600 font-medium shadow-lg"
           >
             {successMessage}
           </motion.div>
@@ -124,61 +120,78 @@ export default function FigurineShop({ onBack }: FigurineShopProps) {
       </AnimatePresence>
 
       {/* 横幅 */}
-      <div className="relative overflow-hidden py-12 sm:py-16 px-4">
-        <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10" />
-        <div className="relative max-w-7xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <Sparkles size={18} className="text-pink-400" />
-              <span className="text-pink-400/80 text-sm tracking-widest uppercase">限量发售中</span>
-              <Sparkles size={18} className="text-pink-400" />
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-serif mb-3">花之精灵系列公仔</h2>
-            <p className="text-white/50 max-w-xl mx-auto text-sm leading-relaxed">
-              每一款公仔都以世界各地的名花为灵感，纯手工上色，限量发售。扫码即可完成支付，轻松拥有你的花之守护精灵。
+      <div className="relative overflow-hidden bg-gradient-to-r from-pink-100 via-purple-50 to-yellow-50 py-10 sm:py-14 px-4">
+        <div className="absolute top-2 left-10 text-4xl opacity-30 animate-bounce" style={{ animationDelay: '0s' }}>🐱</div>
+        <div className="absolute top-4 right-16 text-3xl opacity-30 animate-bounce" style={{ animationDelay: '0.5s' }}>🐰</div>
+        <div className="absolute bottom-2 left-1/4 text-3xl opacity-20 animate-bounce" style={{ animationDelay: '1s' }}>⭐</div>
+        <div className="absolute bottom-4 right-1/3 text-2xl opacity-20 animate-bounce" style={{ animationDelay: '1.5s' }}>🌈</div>
+        <div className="relative max-w-6xl mx-auto text-center">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-3">
+              把可爱带回家 <span className="inline-block animate-pulse">💕</span>
+            </h2>
+            <p className="text-gray-500 max-w-md mx-auto text-sm leading-relaxed">
+              每一只公仔都有独特的小故事，选一只你最喜欢的，扫码支付即可拥有~
             </p>
           </motion.div>
         </div>
       </div>
 
+      {/* 信任标识 */}
+      <div className="max-w-6xl mx-auto px-4 py-4 flex justify-center gap-6 sm:gap-10 text-xs text-gray-400">
+        <div className="flex items-center gap-1.5"><Truck size={14} /> 全国包邮</div>
+        <div className="flex items-center gap-1.5"><ShieldCheck size={14} /> 正品保证</div>
+        <div className="flex items-center gap-1.5"><Heart size={14} /> 7天无理由</div>
+      </div>
+
+      {/* 分类标签 */}
+      <div className="max-w-6xl mx-auto px-4 pb-2">
+        <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all ${
+                activeCategory === cat
+                  ? 'bg-pink-500 text-white shadow-md shadow-pink-200'
+                  : 'bg-white text-gray-500 hover:bg-pink-50 border border-gray-100'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* 商品列表 */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {figurines.map((figurine, index) => (
+      <div className="max-w-6xl mx-auto px-4 py-6 pb-24">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+          {filteredFigurines.map((figurine, index) => (
             <motion.div
               key={figurine.id}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="group bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden hover:border-white/15 transition-all duration-500 hover:shadow-[0_0_40px_rgba(255,255,255,0.05)]"
+              transition={{ delay: index * 0.05 }}
+              onClick={() => setSelectedFigurine(figurine)}
+              className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-pink-50 hover:border-pink-200"
             >
-              {/* 商品图片 */}
-              <div
-                className="relative aspect-square overflow-hidden cursor-pointer"
-                onClick={() => setSelectedFigurine(figurine)}
-              >
+              <div className="relative aspect-square overflow-hidden bg-gradient-to-b from-pink-50 to-purple-50">
                 <img
                   src={figurine.image}
                   alt={figurine.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                {/* 标签 */}
                 {figurine.tags.length > 0 && (
-                  <div className="absolute top-3 left-3 flex gap-2">
+                  <div className="absolute top-2 left-2 flex flex-col gap-1">
                     {figurine.tags.map(tag => (
                       <span
                         key={tag}
-                        className={`px-2.5 py-1 rounded-full text-xs font-medium backdrop-blur-md ${
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
                           tag === '限量'
-                            ? 'bg-red-500/30 text-red-300 border border-red-500/30'
+                            ? 'bg-red-500 text-white'
                             : tag === '新品'
-                            ? 'bg-blue-500/30 text-blue-300 border border-blue-500/30'
-                            : 'bg-orange-500/30 text-orange-300 border border-orange-500/30'
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-orange-500 text-white'
                         }`}
                       >
                         {tag}
@@ -186,55 +199,63 @@ export default function FigurineShop({ onBack }: FigurineShopProps) {
                     ))}
                   </div>
                 )}
-                {/* 库存 */}
-                {figurine.stock <= 5 && (
-                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs bg-black/60 text-white/70 backdrop-blur-md border border-white/10">
-                    仅剩 {figurine.stock} 件
+                {figurine.stock <= 10 && (
+                  <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md text-[10px] bg-black/50 text-white backdrop-blur-sm">
+                    仅剩{figurine.stock}件
                   </div>
                 )}
-                <div className="absolute bottom-3 left-3">
-                  <span className="text-white/50 text-xs tracking-wider uppercase">{figurine.category}</span>
-                </div>
               </div>
-
-              {/* 商品信息 */}
-              <div className="p-5">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="text-white font-medium text-lg">{figurine.name}</h3>
-                  <div className="flex items-center gap-0.5 text-yellow-400 shrink-0 ml-2">
-                    <Star size={14} fill="currentColor" />
-                    <span className="text-xs text-white/50">4.9</span>
-                  </div>
-                </div>
-                <p className="text-white/40 text-sm line-clamp-2 leading-relaxed mb-4">{figurine.description}</p>
-                <div className="flex items-end justify-between">
-                  <div>
-                    <span className="text-orange-400 text-2xl font-bold">¥{figurine.price}</span>
+              <div className="p-3 sm:p-4">
+                <h3 className="font-bold text-sm sm:text-base text-gray-800 truncate">{figurine.name}</h3>
+                <p className="text-gray-400 text-xs mt-1 line-clamp-1">{figurine.description}</p>
+                <div className="flex items-center justify-between mt-3">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-pink-500 text-lg sm:text-xl font-bold">¥{figurine.price}</span>
                     {figurine.originalPrice && (
-                      <span className="text-white/30 text-sm line-through ml-2">¥{figurine.originalPrice}</span>
+                      <span className="text-gray-300 text-xs line-through">¥{figurine.originalPrice}</span>
                     )}
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => addToCart(figurine)}
-                      className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors border border-white/5"
-                      title="加入购物车"
-                    >
-                      <ShoppingCart size={18} />
-                    </button>
-                    <button
-                      onClick={() => handleBuyNow(figurine)}
-                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-400 hover:to-purple-400 text-white text-sm font-medium transition-all shadow-lg shadow-pink-500/20"
-                    >
-                      立即购买
-                    </button>
-                  </div>
+                  <button
+                    onClick={(e) => addToCart(figurine, e)}
+                    className="p-2 rounded-xl bg-pink-500 hover:bg-pink-400 text-white transition-colors shadow-sm shadow-pink-200 active:scale-90"
+                  >
+                    <Plus size={16} />
+                  </button>
                 </div>
               </div>
             </motion.div>
           ))}
         </div>
       </div>
+
+      {/* 底部购物栏 */}
+      {cartCount > 0 && (
+        <motion.div
+          initial={{ y: 100 }}
+          animate={{ y: 0 }}
+          className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-pink-100 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]"
+        >
+          <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <button onClick={() => setShowCart(true)} className="flex items-center gap-3">
+              <div className="relative">
+                <ShoppingCart size={24} className="text-gray-600" />
+                <span className="absolute -top-2 -right-2 w-5 h-5 bg-pink-500 rounded-full text-white text-[11px] flex items-center justify-center font-bold">
+                  {cartCount}
+                </span>
+              </div>
+              <div className="text-left">
+                <p className="text-pink-500 text-xl font-bold">¥{cartTotal}</p>
+              </div>
+            </button>
+            <button
+              onClick={handleCheckout}
+              className="px-8 py-3 rounded-full bg-gradient-to-r from-pink-500 to-rose-400 text-white font-bold shadow-lg shadow-pink-200 active:scale-95 transition-transform"
+            >
+              去结算
+            </button>
+          </div>
+        </motion.div>
+      )}
 
       {/* 购物车侧边栏 */}
       <AnimatePresence>
@@ -244,52 +265,49 @@ export default function FigurineShop({ onBack }: FigurineShopProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+              className="fixed inset-0 z-50 bg-black/30"
               onClick={() => setShowCart(false)}
             />
             <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-sm bg-gray-950 border-l border-white/10 flex flex-col"
+              className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl max-h-[70vh] flex flex-col"
             >
-              <div className="p-5 border-b border-white/10 flex items-center justify-between">
-                <h3 className="text-white font-medium text-lg">购物车 ({cartCount})</h3>
-                <button
-                  onClick={() => setShowCart(false)}
-                  className="p-1.5 rounded-full hover:bg-white/10 text-white/60"
-                >
-                  <ArrowLeft size={18} />
+              <div className="p-5 border-b border-gray-100 flex items-center justify-between shrink-0">
+                <h3 className="font-bold text-lg text-gray-800">购物车 ({cartCount})</h3>
+                <button onClick={() => setShowCart(false)} className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400">
+                  <X size={18} />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {cart.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-white/30">
+                  <div className="flex flex-col items-center justify-center py-12 text-gray-300">
                     <Package size={48} className="mb-3" />
-                    <p>购物车是空的</p>
+                    <p>购物车空空的~</p>
                   </div>
                 ) : (
                   cart.map(item => (
-                    <div key={item.figurine.id} className="flex gap-4 p-3 rounded-xl bg-white/[0.03] border border-white/5">
-                      <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-white/10">
+                    <div key={item.figurine.id} className="flex gap-3 p-3 rounded-2xl bg-pink-50/50 border border-pink-100">
+                      <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-white">
                         <img src={item.figurine.image} alt={item.figurine.name} className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm font-medium truncate">{item.figurine.name}</p>
-                        <p className="text-orange-400 font-bold mt-1">¥{item.figurine.price}</p>
-                        <div className="flex items-center gap-3 mt-2">
+                        <p className="font-bold text-sm text-gray-800 truncate">{item.figurine.name}</p>
+                        <p className="text-pink-500 font-bold mt-1">¥{item.figurine.price}</p>
+                        <div className="flex items-center gap-3 mt-1.5">
                           <button
                             onClick={() => removeFromCart(item.figurine.id)}
-                            className="p-1 rounded-md bg-white/5 hover:bg-white/10 text-white/50"
+                            className="p-1 rounded-lg bg-white border border-gray-200 text-gray-400 active:scale-90"
                           >
                             <Minus size={14} />
                           </button>
-                          <span className="text-white text-sm w-6 text-center">{item.quantity}</span>
+                          <span className="text-sm font-bold w-5 text-center">{item.quantity}</span>
                           <button
                             onClick={() => addToCart(item.figurine)}
-                            className="p-1 rounded-md bg-white/5 hover:bg-white/10 text-white/50"
+                            className="p-1 rounded-lg bg-white border border-gray-200 text-gray-400 active:scale-90"
                           >
                             <Plus size={14} />
                           </button>
@@ -301,16 +319,16 @@ export default function FigurineShop({ onBack }: FigurineShopProps) {
               </div>
 
               {cart.length > 0 && (
-                <div className="p-5 border-t border-white/10">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-white/50">合计</span>
-                    <span className="text-orange-400 text-2xl font-bold">¥{cartTotal}</span>
+                <div className="p-4 border-t border-gray-100 shrink-0">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-gray-400 text-sm">合计</span>
+                    <span className="text-pink-500 text-2xl font-bold">¥{cartTotal}</span>
                   </div>
                   <button
                     onClick={handleCheckout}
-                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-400 hover:to-purple-400 text-white font-medium transition-all shadow-lg shadow-pink-500/20"
+                    className="w-full py-3.5 rounded-full bg-gradient-to-r from-pink-500 to-rose-400 text-white font-bold shadow-lg shadow-pink-200 active:scale-[0.98] transition-transform"
                   >
-                    扫码结算
+                    扫码支付
                   </button>
                 </div>
               )}
@@ -326,53 +344,64 @@ export default function FigurineShop({ onBack }: FigurineShopProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30"
             onClick={(e) => e.target === e.currentTarget && setSelectedFigurine(null)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-gray-950 border border-white/10 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl max-h-[90vh] flex flex-col"
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md max-h-[85vh] flex flex-col overflow-hidden"
             >
-              <div className="relative aspect-[4/3] overflow-hidden shrink-0">
+              <div className="relative aspect-square overflow-hidden shrink-0 bg-gradient-to-b from-pink-50 to-purple-50">
                 <img src={selectedFigurine.image} alt={selectedFigurine.name} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent" />
                 <button
                   onClick={() => setSelectedFigurine(null)}
-                  className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/80 rounded-full text-white/80 backdrop-blur-md"
+                  className="absolute top-4 right-4 p-2 bg-white/80 hover:bg-white rounded-full text-gray-500 backdrop-blur-md shadow-sm"
                 >
-                  <ArrowLeft size={18} />
+                  <X size={18} />
                 </button>
-                <div className="absolute bottom-4 left-5">
-                  <span className="text-white/50 text-xs tracking-wider uppercase">{selectedFigurine.category}</span>
-                  <h2 className="text-white text-2xl font-serif mt-1">{selectedFigurine.name}</h2>
-                </div>
+                {selectedFigurine.originalPrice && (
+                  <div className="absolute top-4 left-4 px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-lg shadow-sm">
+                    省¥{selectedFigurine.originalPrice - selectedFigurine.price}
+                  </div>
+                )}
               </div>
               <div className="p-5 overflow-y-auto">
-                <p className="text-white/60 text-sm leading-relaxed">{selectedFigurine.description}</p>
-                <div className="mt-5 flex items-end justify-between">
-                  <div>
-                    <span className="text-orange-400 text-3xl font-bold">¥{selectedFigurine.price}</span>
-                    {selectedFigurine.originalPrice && (
-                      <span className="text-white/30 text-sm line-through ml-2">¥{selectedFigurine.originalPrice}</span>
-                    )}
-                    <p className="text-white/30 text-xs mt-1">库存: {selectedFigurine.stock} 件</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] px-2 py-0.5 bg-pink-100 text-pink-500 rounded-md font-medium">{selectedFigurine.category}</span>
+                  <div className="flex items-center gap-0.5 text-yellow-400">
+                    <Star size={12} fill="currentColor" />
+                    <Star size={12} fill="currentColor" />
+                    <Star size={12} fill="currentColor" />
+                    <Star size={12} fill="currentColor" />
+                    <Star size={12} fill="currentColor" />
+                    <span className="text-xs text-gray-400 ml-1">4.9</span>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => { addToCart(selectedFigurine); setSelectedFigurine(null); }}
-                      className="px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-sm border border-white/10 transition-colors"
-                    >
-                      加入购物车
-                    </button>
-                    <button
-                      onClick={() => { setSelectedFigurine(null); handleBuyNow(selectedFigurine); }}
-                      className="px-5 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-400 hover:to-purple-400 text-white text-sm font-medium shadow-lg shadow-pink-500/20"
-                    >
-                      立即购买
-                    </button>
-                  </div>
+                </div>
+                <h2 className="text-xl font-bold text-gray-800 mt-2">{selectedFigurine.name}</h2>
+                <p className="text-gray-500 text-sm leading-relaxed mt-3">{selectedFigurine.description}</p>
+                <div className="mt-4 flex items-baseline gap-2">
+                  <span className="text-pink-500 text-3xl font-bold">¥{selectedFigurine.price}</span>
+                  {selectedFigurine.originalPrice && (
+                    <span className="text-gray-300 text-sm line-through">¥{selectedFigurine.originalPrice}</span>
+                  )}
+                </div>
+                <p className="text-gray-400 text-xs mt-1">库存 {selectedFigurine.stock} 件 · 全国包邮</p>
+                <div className="flex gap-3 mt-5">
+                  <button
+                    onClick={() => { addToCart(selectedFigurine); setSelectedFigurine(null); }}
+                    className="flex-1 py-3 rounded-full bg-pink-50 text-pink-500 font-bold border-2 border-pink-200 hover:bg-pink-100 transition-colors active:scale-[0.98]"
+                  >
+                    加入购物车
+                  </button>
+                  <button
+                    onClick={() => handleBuyNow(selectedFigurine)}
+                    className="flex-1 py-3 rounded-full bg-gradient-to-r from-pink-500 to-rose-400 text-white font-bold shadow-lg shadow-pink-200 active:scale-[0.98] transition-transform"
+                  >
+                    立即购买
+                  </button>
                 </div>
               </div>
             </motion.div>

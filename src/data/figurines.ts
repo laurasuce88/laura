@@ -12,67 +12,88 @@ export interface Figurine {
 
 export const figurines: Figurine[] = [
   {
-    id: 'sakura-fairy',
-    name: '樱花精灵',
-    description: '以日本樱花为灵感的精灵公仔，手持一枝盛开的樱花，裙摆如花瓣般飘逸。限量手工上色，每一件都独一无二。',
-    price: 299,
-    originalPrice: 399,
-    image: 'https://image.pollinations.ai/prompt/cute%20anime%20figurine%20sakura%20fairy%20girl%20holding%20cherry%20blossom%20branch%20pink%20dress%20detailed%20PVC%20figure%20studio%20lighting?width=600&height=600&nologo=true',
-    category: '花仙系列',
-    tags: ['限量', '热销'],
-    stock: 12
+    id: 'sleepy-cat',
+    name: '瞌睡猫咪',
+    description: '趴在云朵上打盹的小猫咪，柔软的肉垫和微微翘起的尾巴，治愈感满满。附赠迷你毛线球配件。',
+    price: 89,
+    originalPrice: 129,
+    image: 'https://image.pollinations.ai/prompt/super%20cute%20kawaii%20sleeping%20cat%20figurine%20on%20cloud%20pastel%20colors%20chibi%20style%20soft%20lighting%20studio%20photo%20white%20background?width=600&height=600&nologo=true',
+    category: '萌宠系列',
+    tags: ['热销'],
+    stock: 30
   },
   {
-    id: 'lavender-dream',
-    name: '薰衣草之梦',
-    description: '普罗旺斯薰衣草田中沉睡的少女，紫色长发随风飘散，周围环绕着梦幻的薰衣草花环。',
-    price: 359,
-    originalPrice: 459,
-    image: 'https://image.pollinations.ai/prompt/cute%20anime%20figurine%20sleeping%20girl%20lavender%20field%20purple%20hair%20flower%20wreath%20detailed%20PVC%20figure%20studio%20lighting?width=600&height=600&nologo=true',
-    category: '花仙系列',
+    id: 'bunny-strawberry',
+    name: '草莓兔兔',
+    description: '头戴草莓帽的害羞小兔子，粉嫩的脸颊和圆溜溜的大眼睛让人忍不住想捏一捏！',
+    price: 69,
+    image: 'https://image.pollinations.ai/prompt/super%20cute%20kawaii%20bunny%20figurine%20wearing%20strawberry%20hat%20pink%20cheeks%20chibi%20style%20pastel%20studio%20photo%20white%20background?width=600&height=600&nologo=true',
+    category: '萌宠系列',
+    tags: ['新品', '热销'],
+    stock: 50
+  },
+  {
+    id: 'penguin-scarf',
+    name: '围巾小企鹅',
+    description: '围着红色围巾的呆萌企鹅宝宝，胖嘟嘟的身体摇摇晃晃，放在桌上超级解压。',
+    price: 79,
+    originalPrice: 99,
+    image: 'https://image.pollinations.ai/prompt/super%20cute%20kawaii%20baby%20penguin%20figurine%20wearing%20red%20scarf%20chubby%20chibi%20style%20pastel%20studio%20photo%20white%20background?width=600&height=600&nologo=true',
+    category: '萌宠系列',
+    tags: [],
+    stock: 25
+  },
+  {
+    id: 'bear-honey',
+    name: '蜂蜜小熊',
+    description: '抱着蜂蜜罐的贪吃小熊，嘴角沾着蜂蜜的样子太可爱了！底座是一片小花园。',
+    price: 99,
+    originalPrice: 139,
+    image: 'https://image.pollinations.ai/prompt/super%20cute%20kawaii%20bear%20figurine%20hugging%20honey%20jar%20chibi%20style%20pastel%20yellow%20studio%20photo%20white%20background?width=600&height=600&nologo=true',
+    category: '甜点伙伴',
+    tags: ['限量'],
+    stock: 10
+  },
+  {
+    id: 'duck-raincoat',
+    name: '雨衣小黄鸭',
+    description: '穿着透明雨衣的小黄鸭，头顶一片小荷叶，脚边有迷你水洼和小青蛙伙伴。',
+    price: 59,
+    image: 'https://image.pollinations.ai/prompt/super%20cute%20kawaii%20yellow%20rubber%20duck%20figurine%20wearing%20transparent%20raincoat%20chibi%20style%20pastel%20studio%20photo%20white%20background?width=600&height=600&nologo=true',
+    category: '萌宠系列',
     tags: ['新品'],
+    stock: 40
+  },
+  {
+    id: 'corgi-bread',
+    name: '面包柯基',
+    description: '化身为一条法式面包的柯基犬，圆滚滚的屁股是面包的形状，每一只表情都不一样哦。',
+    price: 109,
+    originalPrice: 149,
+    image: 'https://image.pollinations.ai/prompt/super%20cute%20kawaii%20corgi%20dog%20figurine%20shaped%20like%20bread%20loaf%20chibi%20style%20pastel%20studio%20photo%20white%20background?width=600&height=600&nologo=true',
+    category: '甜点伙伴',
+    tags: ['热销', '限量'],
     stock: 8
   },
   {
-    id: 'sunflower-guardian',
-    name: '向日葵守护者',
-    description: '阳光少年手持巨大的向日葵盾牌，金色铠甲在阳光下闪耀。充满正能量的守护者系列。',
-    price: 259,
-    image: 'https://image.pollinations.ai/prompt/cute%20anime%20figurine%20boy%20sunflower%20shield%20golden%20armor%20detailed%20PVC%20figure%20studio%20lighting?width=600&height=600&nologo=true',
-    category: '守护者系列',
-    tags: ['热销'],
-    stock: 20
+    id: 'unicorn-donut',
+    name: '甜甜圈独角兽',
+    description: '坐在巨大甜甜圈上的迷你独角兽，彩虹色鬃毛配上星星眼，梦幻少女心爆棚！',
+    price: 129,
+    image: 'https://image.pollinations.ai/prompt/super%20cute%20kawaii%20unicorn%20figurine%20sitting%20on%20donut%20rainbow%20mane%20chibi%20style%20pastel%20studio%20photo%20white%20background?width=600&height=600&nologo=true',
+    category: '梦幻世界',
+    tags: ['新品'],
+    stock: 18
   },
   {
-    id: 'lotus-princess',
-    name: '莲花公主',
-    description: '端坐于莲花宝座之上的优雅公主，身着粉白渐变汉服，手持莲花法杖，气质超然脱俗。',
-    price: 499,
-    originalPrice: 599,
-    image: 'https://image.pollinations.ai/prompt/cute%20anime%20figurine%20lotus%20princess%20sitting%20on%20lotus%20throne%20chinese%20hanfu%20pink%20white%20detailed%20PVC%20figure%20studio%20lighting?width=600&height=600&nologo=true',
-    category: '花仙系列',
-    tags: ['限量', '新品'],
-    stock: 5
-  },
-  {
-    id: 'rose-knight',
-    name: '玫瑰骑士',
-    description: '身披红色斗篷的英勇骑士，手持玫瑰剑，是爱与勇气的化身。底座精心还原玫瑰花园场景。',
-    price: 329,
-    image: 'https://image.pollinations.ai/prompt/cute%20anime%20figurine%20rose%20knight%20red%20cape%20rose%20sword%20detailed%20PVC%20figure%20studio%20lighting?width=600&height=600&nologo=true',
-    category: '守护者系列',
-    tags: [],
-    stock: 15
-  },
-  {
-    id: 'orchid-dancer',
-    name: '兰花舞者',
-    description: '翩翩起舞的兰花精灵，透明的蝴蝶翅膀在光线下折射出梦幻光彩。动态舞姿定格最美瞬间。',
-    price: 389,
-    originalPrice: 489,
-    image: 'https://image.pollinations.ai/prompt/cute%20anime%20figurine%20orchid%20dancer%20butterfly%20wings%20dancing%20pose%20purple%20detailed%20PVC%20figure%20studio%20lighting?width=600&height=600&nologo=true',
-    category: '花仙系列',
+    id: 'shiba-astronaut',
+    name: '太空柴犬',
+    description: '穿着宇航服探索宇宙的柴犬，头盔里的笑脸永远那么治愈。配有迷你星球底座。',
+    price: 159,
+    originalPrice: 199,
+    image: 'https://image.pollinations.ai/prompt/super%20cute%20kawaii%20shiba%20inu%20dog%20figurine%20wearing%20astronaut%20suit%20chibi%20style%20pastel%20studio%20photo%20white%20background?width=600&height=600&nologo=true',
+    category: '梦幻世界',
     tags: ['限量'],
-    stock: 3
+    stock: 6
   }
 ];
