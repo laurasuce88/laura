@@ -175,11 +175,17 @@ export default function FigurineShop() {
               onClick={() => setSelectedFigurine(figurine)}
               className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-pink-50 hover:border-pink-200"
             >
-              <div className="relative aspect-square overflow-hidden bg-gradient-to-b from-pink-50 to-purple-50">
+              <div className="relative aspect-square overflow-hidden" style={{ backgroundColor: figurine.bgColor }}>
+                {/* Emoji 背景兜底 */}
+                <div className="absolute inset-0 flex items-center justify-center text-8xl opacity-80 pointer-events-none select-none">
+                  {figurine.emoji}
+                </div>
                 <img
                   src={figurine.image}
                   alt={figurine.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  loading="lazy"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
                 {figurine.tags.length > 0 && (
                   <div className="absolute top-2 left-2 flex flex-col gap-1">
@@ -291,8 +297,9 @@ export default function FigurineShop() {
                 ) : (
                   cart.map(item => (
                     <div key={item.figurine.id} className="flex gap-3 p-3 rounded-2xl bg-pink-50/50 border border-pink-100">
-                      <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-white">
-                        <img src={item.figurine.image} alt={item.figurine.name} className="w-full h-full object-cover" />
+                      <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0" style={{ backgroundColor: item.figurine.bgColor }}>
+                        <div className="absolute inset-0 flex items-center justify-center text-3xl select-none">{item.figurine.emoji}</div>
+                        <img src={item.figurine.image} alt={item.figurine.name} className="absolute inset-0 w-full h-full object-cover" loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-sm text-gray-800 truncate">{item.figurine.name}</p>
@@ -354,8 +361,9 @@ export default function FigurineShop() {
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md max-h-[85vh] flex flex-col overflow-hidden"
             >
-              <div className="relative aspect-square overflow-hidden shrink-0 bg-gradient-to-b from-pink-50 to-purple-50">
-                <img src={selectedFigurine.image} alt={selectedFigurine.name} className="w-full h-full object-cover" />
+              <div className="relative aspect-square overflow-hidden shrink-0" style={{ backgroundColor: selectedFigurine.bgColor }}>
+                <div className="absolute inset-0 flex items-center justify-center text-[120px] opacity-80 pointer-events-none select-none">{selectedFigurine.emoji}</div>
+                <img src={selectedFigurine.image} alt={selectedFigurine.name} className="absolute inset-0 w-full h-full object-cover" loading="lazy" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                 <button
                   onClick={() => setSelectedFigurine(null)}
                   className="absolute top-4 right-4 p-2 bg-white/80 hover:bg-white rounded-full text-gray-500 backdrop-blur-md shadow-sm"
