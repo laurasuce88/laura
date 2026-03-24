@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Check, Smartphone, ShieldCheck, Clock } from 'lucide-react';
+import { X, Check, Smartphone, ShieldCheck, Clock, AlertCircle, Loader2 } from 'lucide-react';
 import { Figurine } from '../data/figurines';
 
 type PaymentMethod = 'wechat' | 'alipay';
-type PaymentStatus = 'pending' | 'scanning' | 'confirming' | 'success' | 'failed';
+type PaymentStatus = 'loading' | 'pending' | 'scanning' | 'confirming' | 'success' | 'failed' | 'error';
 
 interface PaymentModalProps {
   figurine: Figurine;
@@ -15,16 +15,98 @@ interface PaymentModalProps {
 }
 
 export default function PaymentModal({ figurine, quantity, onClose, onSuccess }: PaymentModalProps) {
-  const [method, setMethod] = useState<PaymentMethod>('wechat');
-  const [status, setStatus] = useState<PaymentStatus>('pending');
-  const [countdown, setCountdown] = useState(300); // 5 minutes
+  const [method, setMethod] = useState<PaymentMethod>('alipay');
+  const [status, setStatus] = useState<PaymentStatus>('loading');
+  const [countdown, setCountdown] = useState(300);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+  const [outTradeNo, setOutTradeNo] = useState<string>('');
+  const [errorMsg, setErrorMsg] = useState<string>('');
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const totalPrice = figurine.price * quantity;
 
-  // Generate a mock payment URL (in production this would come from the payment gateway)
-  const paymentUrl = `https://pay.example.com/order?id=${figurine.id}&qty=${quantity}&amount=${totalPrice}&method=${method}&t=${Date.now()}`;
+  // 创建支付宝订单
+  const createOrder = useCallback(async () => {
+    setStatus('loading');
+    setErrorMsg('');
+    setQrCodeUrl('');
 
-  // Countdown timer
+    try {
+      const res = await fetch('/api/payment/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          figurineId: figurine.id,
+          figurineName: figurine.name,
+          quantity,
+          totalPrice,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success && data.data?.qrCode) {
+        setQrCodeUrl(data.data.qrCode);
+        setOutTradeNo(data.data.outTradeNo);
+        setStatus('pending');
+        setCountdown(300);
+      } else {
+        setErrorMsg(data.message || '创建订单失败');
+        setStatus('error');
+      }
+    } catch (err: any) {
+      console.error('Create order error:', err);
+      setErrorMsg('网络错误，请检查支付服务是否启动');
+      setStatus('error');
+    }
+  }, [figurine, quantity, totalPrice]);
+
+  // 初始化：支付宝直接创建订单
+  useEffect(() => {
+    if (method === 'alipay') {
+      createOrder();
+    } else {
+      // 微信支付保留模拟模式
+      setStatus('pending');
+      setQrCodeUrl(`https://pay.example.com/wechat?id=${figurine.id}&qty=${quantity}&amount=${totalPrice}&t=${Date.now()}`);
+    }
+  }, [method]);
+
+  // 轮询支付状态
+  useEffect(() => {
+    if (status !== 'pending' || method !== 'alipay' || !outTradeNo) return;
+
+    const startTimer = setTimeout(() => {
+      pollRef.current = setInterval(async () => {
+        try {
+          const res = await fetch(`/api/payment/query?outTradeNo=${outTradeNo}`);
+          const data = await res.json();
+
+          if (data.success && data.data) {
+            const tradeStatus = data.data.status;
+            if (tradeStatus === 'TRADE_SUCCESS' || tradeStatus === 'TRADE_FINISHED') {
+              setStatus('success');
+              setTimeout(() => onSuccess(), 2000);
+            } else if (tradeStatus === 'TRADE_CLOSED') {
+              setStatus('failed');
+            }
+          }
+        } catch (err) {
+          console.error('Poll error:', err);
+        }
+      }, 3000);
+    }, 3000);
+
+    return () => {
+      clearTimeout(startTimer);
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    };
+  }, [status, method, outTradeNo, onSuccess]);
+
+  // 倒计时
   useEffect(() => {
     if (status !== 'pending' && status !== 'scanning') return;
     const timer = setInterval(() => {
@@ -39,26 +121,35 @@ export default function PaymentModal({ figurine, quantity, onClose, onSuccess }:
     return () => clearInterval(timer);
   }, [status]);
 
-  // Simulate payment flow: after 5s of "pending", show "scanning", then after 3s show "success"
-  const simulatePayment = useCallback(() => {
-    if (status !== 'pending') return;
+  // 微信模拟支付
+  const simulateWechatPayment = useCallback(() => {
+    if (status !== 'pending' || method !== 'wechat') return;
     setStatus('scanning');
     setTimeout(() => {
       setStatus('confirming');
       setTimeout(() => {
         setStatus('success');
-        setTimeout(() => {
-          onSuccess();
-        }, 2000);
+        setTimeout(() => onSuccess(), 2000);
       }, 1500);
     }, 2000);
-  }, [status, onSuccess]);
+  }, [status, method, onSuccess]);
+
+  // 清理轮询
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+      }
+    };
+  }, []);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
+
+  const accentColor = method === 'wechat' ? '#22c55e' : '#3b82f6';
 
   return (
     <motion.div
@@ -100,7 +191,7 @@ export default function PaymentModal({ figurine, quantity, onClose, onSuccess }:
         </div>
 
         {/* Payment method tabs */}
-        {status === 'pending' && (
+        {(status === 'pending' || status === 'loading' || status === 'error') && (
           <div className="flex mx-5 mt-4 p-1 bg-white/5 rounded-xl">
             <button
               onClick={() => setMethod('wechat')}
@@ -125,10 +216,41 @@ export default function PaymentModal({ figurine, quantity, onClose, onSuccess }:
           </div>
         )}
 
-        {/* QR Code area */}
+        {/* QR Code / Status area */}
         <div className="p-5 flex flex-col items-center">
           <AnimatePresence mode="wait">
-            {(status === 'pending' || status === 'scanning') && (
+            {/* Loading state */}
+            {status === 'loading' && (
+              <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center py-8">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                >
+                  <Loader2 size={40} className="text-blue-400" />
+                </motion.div>
+                <p className="mt-4 text-white/50 text-sm">正在创建支付订单...</p>
+              </motion.div>
+            )}
+
+            {/* Error state */}
+            {status === 'error' && (
+              <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center py-6">
+                <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mb-4">
+                  <AlertCircle size={32} className="text-orange-400" />
+                </div>
+                <h3 className="text-white text-base font-medium">订单创建失败</h3>
+                <p className="mt-2 text-white/40 text-sm text-center px-4">{errorMsg}</p>
+                <button
+                  onClick={createOrder}
+                  className="mt-4 px-6 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium transition-colors"
+                >
+                  重新创建
+                </button>
+              </motion.div>
+            )}
+
+            {/* QR Code display */}
+            {(status === 'pending' || status === 'scanning') && qrCodeUrl && (
               <motion.div
                 key="qr"
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -136,19 +258,19 @@ export default function PaymentModal({ figurine, quantity, onClose, onSuccess }:
                 exit={{ opacity: 0, scale: 0.8 }}
                 className="flex flex-col items-center"
               >
-                {/* QR code with styled border */}
                 <div
-                  className="relative p-4 rounded-2xl border-2 cursor-pointer"
+                  className="relative p-4 rounded-2xl border-2"
                   style={{
-                    borderColor: method === 'wechat' ? '#22c55e' : '#3b82f6',
+                    borderColor: accentColor,
                     boxShadow: `0 0 30px ${method === 'wechat' ? 'rgba(34,197,94,0.15)' : 'rgba(59,130,246,0.15)'}`,
-                    background: 'white'
+                    background: 'white',
+                    cursor: method === 'wechat' ? 'pointer' : 'default',
                   }}
-                  onClick={simulatePayment}
-                  title="点击模拟扫码支付"
+                  onClick={method === 'wechat' ? simulateWechatPayment : undefined}
+                  title={method === 'wechat' ? '点击模拟扫码支付' : '请用支付宝扫描此二维码'}
                 >
                   <QRCodeSVG
-                    value={paymentUrl}
+                    value={qrCodeUrl}
                     size={200}
                     level="M"
                     bgColor="#ffffff"
@@ -170,7 +292,7 @@ export default function PaymentModal({ figurine, quantity, onClose, onSuccess }:
                     >
                       <motion.div
                         className="w-full h-0.5 rounded-full"
-                        style={{ backgroundColor: method === 'wechat' ? '#22c55e' : '#3b82f6' }}
+                        style={{ backgroundColor: accentColor }}
                         animate={{ y: [0, 200, 0] }}
                         transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
                       />
@@ -178,24 +300,24 @@ export default function PaymentModal({ figurine, quantity, onClose, onSuccess }:
                   )}
                 </div>
 
-                {/* Instructions */}
                 <div className="mt-4 flex items-center gap-2 text-white/50 text-sm">
                   <Smartphone size={16} />
                   <span>
                     {status === 'scanning'
                       ? '已扫码，请在手机上确认支付...'
-                      : `请使用${method === 'wechat' ? '微信' : '支付宝'}扫描二维码`}
+                      : method === 'alipay'
+                        ? '请使用支付宝扫描二维码'
+                        : '请使用微信扫描二维码'}
                   </span>
                 </div>
 
-                {/* Demo hint */}
-                {status === 'pending' && (
-                  <p className="mt-2 text-white/30 text-xs">
-                    (演示模式：点击二维码模拟扫码支付)
-                  </p>
+                {method === 'alipay' && status === 'pending' && (
+                  <p className="mt-2 text-blue-400 text-xs">支付宝沙箱环境 · 扫码即可真实支付</p>
+                )}
+                {method === 'wechat' && status === 'pending' && (
+                  <p className="mt-2 text-white/30 text-xs">(演示模式：点击二维码模拟扫码支付)</p>
                 )}
 
-                {/* Timer */}
                 <div className="mt-3 flex items-center gap-1.5 text-white/30 text-xs">
                   <Clock size={12} />
                   <span>支付剩余时间 {formatTime(countdown)}</span>
