@@ -3,17 +3,28 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { AlipaySdk } from 'alipay-sdk';
+import dotenv from 'dotenv';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rootDir = path.resolve(__dirname, '..');
+
+// 加载 .env 文件
+dotenv.config({ path: path.join(rootDir, '.env') });
 
 // ============================================================
 // 支付宝沙箱配置
-// 请在 .env 中配置以下变量，或直接修改这里的默认值
-// 沙箱环境申请：https://open.alipay.com/develop/sandbox/app
+// 运行 node server/setup.mjs 进行交互式配置
 // ============================================================
-const ALIPAY_APP_ID = process.env.ALIPAY_APP_ID || '9021000144679587';
+const ALIPAY_APP_ID = process.env.ALIPAY_APP_ID || '';
 const ALIPAY_GATEWAY = process.env.ALIPAY_GATEWAY || 'https://openapi-sandbox.dl.alipaydev.com/gateway.do';
 const NOTIFY_URL = process.env.ALIPAY_NOTIFY_URL || 'http://localhost:3001/api/payment/notify';
+const ALIPAY_PUBLIC_KEY = process.env.ALIPAY_PUBLIC_KEY || '';
+
+if (!ALIPAY_APP_ID) {
+  console.error('\n❌ 未配置 ALIPAY_APP_ID！');
+  console.error('   请先运行配置脚本: node server/setup.mjs\n');
+  process.exit(1);
+}
 
 // 读取RSA私钥
 const privateKeyPath = path.join(__dirname, 'keys', 'app_private_key.pem');
@@ -25,8 +36,7 @@ const alipaySdk = new AlipaySdk({
   privateKey,
   gateway: ALIPAY_GATEWAY,
   signType: 'RSA2',
-  // 沙箱环境下可跳过证书验证
-  alipayPublicKey: process.env.ALIPAY_PUBLIC_KEY || '',
+  alipayPublicKey: ALIPAY_PUBLIC_KEY,
 });
 
 const app = express();
