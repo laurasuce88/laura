@@ -123,7 +123,7 @@ async function main() {
     ``,
     `# 支付宝沙箱配置`,
     `ALIPAY_APP_ID="${appId}"`,
-    `ALIPAY_GATEWAY="https://openapi-sandbox.dl.alipaydev.com/gateway.do"`,
+    `ALIPAY_ENDPOINT="https://openapi-sandbox.dl.alipaydev.com"`,
     `ALIPAY_PUBLIC_KEY="${alipayPublicKey}"`,
     `ALIPAY_NOTIFY_URL="http://localhost:3001/api/payment/notify"`,
     ``,
