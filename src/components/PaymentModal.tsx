@@ -21,6 +21,7 @@ export default function PaymentModal({ figurine, quantity, onClose, onSuccess }:
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [outTradeNo, setOutTradeNo] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string>('');
+  const [isMock, setIsMock] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const totalPrice = figurine.price * quantity;
@@ -48,6 +49,7 @@ export default function PaymentModal({ figurine, quantity, onClose, onSuccess }:
       if (data.success && data.data?.qrCode) {
         setQrCodeUrl(data.data.qrCode);
         setOutTradeNo(data.data.outTradeNo);
+        setIsMock(!!data.mock);
         setStatus('pending');
         setCountdown(300);
       } else {
@@ -121,18 +123,34 @@ export default function PaymentModal({ figurine, quantity, onClose, onSuccess }:
     return () => clearInterval(timer);
   }, [status]);
 
-  // 微信模拟支付
-  const simulateWechatPayment = useCallback(() => {
-    if (status !== 'pending' || method !== 'wechat') return;
-    setStatus('scanning');
-    setTimeout(() => {
-      setStatus('confirming');
+  // 模拟支付（微信 或 支付宝模拟模式）
+  const simulatePayment = useCallback(async () => {
+    if (status !== 'pending') return;
+    // 支付宝模拟模式：通知后端
+    if (method === 'alipay' && isMock && outTradeNo) {
+      setStatus('scanning');
+      setTimeout(async () => {
+        setStatus('confirming');
+        try { await fetch('/api/payment/mock-pay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ outTradeNo }) }); } catch {}
+        setTimeout(() => {
+          setStatus('success');
+          setTimeout(() => onSuccess(), 2000);
+        }, 1500);
+      }, 2000);
+      return;
+    }
+    // 微信模拟
+    if (method === 'wechat') {
+      setStatus('scanning');
       setTimeout(() => {
-        setStatus('success');
-        setTimeout(() => onSuccess(), 2000);
-      }, 1500);
-    }, 2000);
-  }, [status, method, onSuccess]);
+        setStatus('confirming');
+        setTimeout(() => {
+          setStatus('success');
+          setTimeout(() => onSuccess(), 2000);
+        }, 1500);
+      }, 2000);
+    }
+  }, [status, method, isMock, outTradeNo, onSuccess]);
 
   // 清理轮询
   useEffect(() => {
@@ -264,10 +282,10 @@ export default function PaymentModal({ figurine, quantity, onClose, onSuccess }:
                     borderColor: accentColor,
                     boxShadow: `0 0 30px ${method === 'wechat' ? 'rgba(34,197,94,0.15)' : 'rgba(59,130,246,0.15)'}`,
                     background: 'white',
-                    cursor: method === 'wechat' ? 'pointer' : 'default',
+                    cursor: (method === 'wechat' || isMock) ? 'pointer' : 'default',
                   }}
-                  onClick={method === 'wechat' ? simulateWechatPayment : undefined}
-                  title={method === 'wechat' ? '点击模拟扫码支付' : '请用支付宝扫描此二维码'}
+                  onClick={(method === 'wechat' || isMock) ? simulatePayment : undefined}
+                  title={(method === 'wechat' || isMock) ? '点击模拟扫码支付' : '请用支付宝扫描此二维码'}
                 >
                   <QRCodeSVG
                     value={qrCodeUrl}
@@ -311,11 +329,11 @@ export default function PaymentModal({ figurine, quantity, onClose, onSuccess }:
                   </span>
                 </div>
 
-                {method === 'alipay' && status === 'pending' && (
+                {method === 'alipay' && status === 'pending' && !isMock && (
                   <p className="mt-2 text-blue-400 text-xs">支付宝沙箱环境 · 扫码即可真实支付</p>
                 )}
-                {method === 'wechat' && status === 'pending' && (
-                  <p className="mt-2 text-white/30 text-xs">(演示模式：点击二维码模拟扫码支付)</p>
+                {(method === 'wechat' || isMock) && status === 'pending' && (
+                  <p className="mt-2 text-white/30 text-xs">(点击二维码模拟扫码支付)</p>
                 )}
 
                 <div className="mt-3 flex items-center gap-1.5 text-white/30 text-xs">
