@@ -1,0 +1,4 @@
+interface:
+  display_name: "Alipay Web Page Pay"
+  short_description: "Alipay web pay from sandbox to production with runbook"
+  default_prompt: "Implement Alipay PC Website Payment end-to-end for this project: page pay, notify verification, reconciliation, and production rollout readiness."
